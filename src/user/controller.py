@@ -1,4 +1,4 @@
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Request
 from sqlalchemy.orm import Session
 from src.user.dto import UserRequest, LoginRequest
 from src.user.models import User
@@ -53,6 +53,11 @@ def login(request:LoginRequest, db:Session):
 
     exp_time = datetime.now() + timedelta(minutes=settings.EXP_TIME)
 
-    token = jwt.encode({"_id":user.id, "exp":exp_time}, settings.SECRET_KEY, settings.ALGORITHM)
+    token = jwt.encode({
+        "_id":user.id,
+        "username":user.username,
+        "email":user.email,
+        "exp":exp_time.timestamp()},
+        settings.SECRET_KEY, settings.ALGORITHM)
 
     return {"token":token}

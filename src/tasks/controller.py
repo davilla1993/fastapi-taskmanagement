@@ -1,14 +1,15 @@
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Depends
 from sqlalchemy.orm import Session
 from src.tasks.dto import TaskRequest
 from src.tasks.models import Task
+from src.user.models import User
 
-
-def create_task(request:TaskRequest, db:Session):
+def create_task(request:TaskRequest, db:Session, user:User):
     new_task = Task()
     new_task.title = request.title
     new_task.description = request.description
     new_task.is_completed = request.is_completed
+    new_task.user_id = user.id
 
     db.add(new_task)
     db.commit()
@@ -17,8 +18,10 @@ def create_task(request:TaskRequest, db:Session):
     return new_task
 
 
-def get_tasks(db:Session):
-    tasks = db.query(Task).all()
+def get_tasks(db:Session, user:User):
+    tasks = (db.query(Task)
+             .filter(Task.user_id == user.id)
+             .all())
 
     return tasks
 
@@ -56,5 +59,4 @@ def delete_task(task_id:int, db:Session):
 
     db.delete(exist_task)
     db.commit()
-
     return None
